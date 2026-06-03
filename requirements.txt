@@ -1,0 +1,12 @@
+numpy
+pandas
+matplotlib
+scipy
+scikit-learn
+torch
+torchvision
+torchaudio
+flask
+fastapi
+uvicorn
+gradio
