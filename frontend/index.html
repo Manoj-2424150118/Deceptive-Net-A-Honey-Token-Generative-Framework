@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deceptive-Net | Secure Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .login-page { min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+        .login-card { width: 400px; padding: 48px; }
+        .login-logo { text-align: center; margin-bottom: 40px; }
+        .login-logo .onion { font-size: 3rem; margin-bottom: 12px; }
+        .login-logo h1 { font-family: var(--font-mono); font-size: 1.4rem; color: var(--accent); }
+        .login-logo p { color: var(--text-secondary); font-size: 0.85rem; margin-top: 6px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); margin-bottom: 8px; font-family: var(--font-mono); }
+        .form-group input { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--panel-border); color: var(--text-primary); padding: 12px 16px; border-radius: 4px; font-family: var(--font-mono); font-size: 0.95rem; outline: none; transition: border-color 0.3s; }
+        .form-group input:focus { border-color: var(--accent); }
+        .btn-full { width: 100%; padding: 14px; font-size: 1rem; justify-content: center; }
+        #login-error { color: var(--danger); font-size: 0.85rem; margin-top: 12px; text-align: center; display: none; font-family: var(--font-mono); }
+        .role-hint { margin-top: 24px; padding: 16px; border-radius: 4px; background: rgba(148,0,255,0.05); border: 1px solid var(--panel-border); }
+        .role-hint p { font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 4px; }
+        .role-hint span { color: var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="login-page">
+        <div class="login-card glass-panel">
+            <div class="login-logo">
+                <div class="onion">🧅</div>
+                <h1>Deceptive-Net</h1>
+                <p>Generative AI Cyber Deception Framework</p>
+            </div>
+            
+            <!-- SaaS Tab toggles -->
+            <div style="display:flex; justify-content:space-around; margin-bottom: 24px; font-family:var(--font-mono); font-size:0.8rem; border-bottom: 1px solid var(--panel-border); padding-bottom: 8px;">
+                <span id="tab-login-btn" style="cursor:pointer; color:var(--accent); font-weight:bold;">[ LOGIN ]</span>
+                <span id="tab-signup-btn" style="cursor:pointer; color:var(--text-secondary);">[ SIGNUP ]</span>
+                <span id="tab-reset-btn" style="cursor:pointer; color:var(--text-secondary);">[ RECOVERY ]</span>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Enter username" autocomplete="off" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    Authenticate Session &rarr;
+                </button>
+            </form>
+
+            <!-- Signup Form (Hidden initially) -->
+            <form id="signup-form" style="display:none;">
+                <div class="form-group">
+                    <label for="signup-username">Username</label>
+                    <input type="text" id="signup-username" placeholder="Desired username" autocomplete="off" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-name">Full Name</label>
+                    <input type="text" id="signup-name" placeholder="Alice Cooper" autocomplete="off" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Password</label>
+                    <input type="password" id="signup-password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full" style="background:var(--accent); border-color:var(--accent);">
+                    Register Account &rarr;
+                </button>
+            </form>
+
+            <!-- Password Reset Form (Hidden initially) -->
+            <form id="reset-form" style="display:none;">
+                <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:16px; line-height:1.4; font-family:var(--font-mono);">
+                    > Enter user identity to establish a recovery key link.
+                </p>
+                <div class="form-group">
+                    <label for="reset-username">Username</label>
+                    <input type="text" id="reset-username" placeholder="Enter username" autocomplete="off" required>
+                </div>
+                <div class="form-group">
+                    <label for="reset-new-password">New Password</label>
+                    <input type="password" id="reset-new-password" placeholder="Enter new password" required>
+                </div>
+                <button type="submit" class="btn btn-ghost btn-full" style="border-color:var(--text-secondary); color:white;">
+                    Establish Reset &rarr;
+                </button>
+            </form>
+            
+            <!-- Google OAuth Block -->
+            <button type="button" onclick="mockGoogleOAuth()" class="btn btn-ghost btn-full" style="margin-top:12px; gap:8px; border-color:rgba(255,255,255,0.08);">
+                <svg style="width:14px; height:14px; color:var(--text-secondary);" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114A5.727 5.727 0 018.17 12.8a5.727 5.727 0 015.82-5.714c1.616 0 3.084.62 4.204 1.637l3.08-3.08C19.38 3.738 16.89 2.5 13.99 2.5a9.5 9.5 0 00-9.5 9.5 9.5 9.5 0 009.5 9.5c5.38 0 8.93-3.78 8.93-9.1a8.4 8.4 0 00-.18-1.615H12.24z"/>
+                </svg>
+                Continue with Google
+            </button>
+
+            <p id="login-error" style="color:var(--danger); font-size:0.82rem; margin-top:16px; text-align:center; display:none; font-family:var(--font-mono);"></p>
+
+            <div class="role-hint">
+                <p>Demo Credentials:</p>
+                <p>admin / <span>admin123</span> &nbsp;|&nbsp; analyst / <span>analyst123</span></p>
+            </div>
+            
+            <div style="margin-top: 24px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-secondary); border-top: 1px solid var(--panel-border); padding-top: 16px; line-height: 1.5;">
+                <strong>Architecture:</strong> FDG &rarr; GAT &rarr; cWGAN-GP &rarr; FiLM &rarr; CAA Attention &rarr; DQN Deployer &rarr; Telemetry Analytics
+            </div>
+        </div>
+        
+        <div style="position: absolute; bottom: 24px; width: 100%; padding: 0 20px; font-size: 0.8rem; color: var(--text-secondary); text-align: center; font-family: var(--font-mono); line-height: 1.6;">
+            Deceptive-Net Deception Lab &copy; 2026. Academic Release.<br>
+            <a href="privacy.html" style="color:var(--accent); text-decoration:none; margin-right:8px;">Privacy Policy</a> &bull;
+            <a href="terms.html" style="color:var(--accent); text-decoration:none; margin-left:8px;">Terms & Conditions</a>
+        </div>
+    </div>
+
+    <!-- GDPR Cookie Consent Popup -->
+    <div id="cookie-consent" class="glass-panel" style="position:fixed; bottom:24px; right:24px; max-width:350px; padding:20px; z-index:1000; font-family:var(--font-mono); font-size:0.75rem; border:1px solid var(--border); box-shadow:0 0 24px rgba(0,0,0,0.5); display:none;">
+        <p style="color:var(--text); margin-bottom:12px; line-height:1.4;">🧅 We use cookies to secure authentication sessions and trace red-team honeypot activity. Agree to proceed?</p>
+        <div style="display:flex; gap:10px;">
+            <button class="btn btn-primary" onclick="acceptCookies()" style="padding:6px 12px; font-size:0.75rem;">Accept</button>
+            <button class="btn btn-ghost" onclick="rejectCookies()" style="padding:6px 12px; font-size:0.75rem; border-color:rgba(255,255,255,0.08);">Decline</button>
+        </div>
+    </div>
+
+    <script>
+        const API = 'http://localhost:8000';
+
+        // GDPR cookie consent handlers
+        if (!localStorage.getItem('cookie_consent')) {
+            document.getElementById('cookie-consent').style.display = 'block';
+        }
+        function acceptCookies() {
+            localStorage.setItem('cookie_consent', 'accepted');
+            document.getElementById('cookie-consent').style.display = 'none';
+            trackGSEvent('COOKIE_CONSENT', 'Accepted cookies banner');
+        }
+        function rejectCookies() {
+            localStorage.setItem('cookie_consent', 'declined');
+            document.getElementById('cookie-consent').style.display = 'none';
+        }
+
+        // Analytic Page view tracking
+        async function trackGSEvent(type, details) {
+            try {
+                await fetch(`${API}/api/tracking/event`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ event_type: type, details: details })
+                });
+            } catch(e) {}
+        }
+        trackGSEvent('PAGE_VIEW', 'index.html');
+
+        // Form toggle handlers
+        const loginBtn  = document.getElementById('tab-login-btn');
+        const signupBtn = document.getElementById('tab-signup-btn');
+        const resetBtn  = document.getElementById('tab-reset-btn');
+
+        const loginForm  = document.getElementById('login-form');
+        const signupForm = document.getElementById('signup-form');
+        const resetForm  = document.getElementById('reset-form');
+        const errorBox   = document.getElementById('login-error');
+
+        function showForm(form, btn) {
+            [loginForm, signupForm, resetForm].forEach(f => f.style.display = 'none');
+            [loginBtn, signupBtn, resetBtn].forEach(b => {
+                b.style.color = 'var(--text-secondary)';
+                b.style.fontWeight = 'normal';
+            });
+            form.style.display = 'block';
+            btn.style.color = 'var(--accent)';
+            btn.style.fontWeight = 'bold';
+            errorBox.style.display = 'none';
+        }
+
+        loginBtn.onclick  = () => showForm(loginForm, loginBtn);
+        signupBtn.onclick = () => showForm(signupForm, signupBtn);
+        resetBtn.onclick  = () => showForm(resetForm, resetBtn);
+
+        // Login Handler
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            errorBox.style.display = 'none';
+            try {
+                const body = new URLSearchParams({ username, password });
+                const res  = await fetch(`${API}/auth/token`, { method: 'POST', body });
+                const data = await res.json();
+                if (!res.ok) { errorBox.textContent = data.detail || 'Login failed'; errorBox.style.display = 'block'; return; }
+                sessionStorage.setItem('dn_token', data.access_token);
+                sessionStorage.setItem('dn_role',  data.role);
+                sessionStorage.setItem('dn_user',  data.username);
+                trackGSEvent('LOGIN_SUCCESS', `user=${username}`);
+                window.location.href = 'dashboard.html';
+            } catch (err) {
+                errorBox.textContent = '> Connection refused. Is the backend running?';
+                errorBox.style.display = 'block';
+            }
+        });
+
+        // Signup Handler
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('signup-username').value;
+            const full_name = document.getElementById('signup-name').value;
+            const password = document.getElementById('signup-password').value;
+            errorBox.style.display = 'none';
+            try {
+                const res = await fetch(`${API}/auth/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, full_name })
+                });
+                const data = await res.json();
+                if (!res.ok) { errorBox.textContent = data.detail || 'Signup failed'; errorBox.style.display = 'block'; return; }
+                errorBox.style.color = 'var(--green)';
+                errorBox.textContent = `✓ Registration successful. Continue to login.`;
+                errorBox.style.display = 'block';
+                setTimeout(() => {
+                    showForm(loginForm, loginBtn);
+                    document.getElementById('username').value = username;
+                    errorBox.style.color = 'var(--danger)';
+                    errorBox.style.display = 'none';
+                }, 1500);
+            } catch (err) {
+                errorBox.textContent = 'Connection error during signup.';
+                errorBox.style.display = 'block';
+            }
+        });
+
+        // Reset Handler
+        resetForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('reset-username').value;
+            const new_password = document.getElementById('reset-new-password').value;
+            errorBox.style.display = 'none';
+            try {
+                const res = await fetch(`${API}/auth/reset-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, new_password })
+                });
+                const data = await res.json();
+                if (!res.ok) { errorBox.textContent = data.detail || 'Recovery failed'; errorBox.style.display = 'block'; return; }
+                errorBox.style.color = 'var(--green)';
+                errorBox.textContent = `✓ Password reset complete. Return to login.`;
+                errorBox.style.display = 'block';
+                setTimeout(() => {
+                    showForm(loginForm, loginBtn);
+                    errorBox.style.color = 'var(--danger)';
+                    errorBox.style.display = 'none';
+                }, 1500);
+            } catch (err) {
+                errorBox.textContent = 'Connection error during password reset.';
+                errorBox.style.display = 'block';
+            }
+        });
+
+        // Mock Google OAuth
+        function mockGoogleOAuth() {
+            errorBox.style.display = 'none';
+            errorBox.style.color = 'var(--accent)';
+            errorBox.textContent = '> Initializing OAuth handshake with accounts.google.com...';
+            errorBox.style.display = 'block';
+            setTimeout(async () => {
+                try {
+                    const regRes = await fetch(`${API}/auth/signup`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: 'oauth_guest', password: 'oauthpassword123', full_name: 'OAuth Guest Analyst' })
+                    }).catch(() => {});
+
+                    const body = new URLSearchParams({ username: 'oauth_guest', password: 'oauthpassword123' });
+                    const res = await fetch(`${API}/auth/token`, { method: 'POST', body });
+                    const data = await res.json();
+                    if (res.ok) {
+                        sessionStorage.setItem('dn_token', data.access_token);
+                        sessionStorage.setItem('dn_role',  data.role);
+                        sessionStorage.setItem('dn_user',  data.username);
+                        trackGSEvent('OAUTH_LOGIN_SUCCESS', 'user=oauth_guest');
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        errorBox.style.color = 'var(--danger)';
+                        errorBox.textContent = 'OAuth verification failed.';
+                    }
+                } catch(e) {
+                    errorBox.style.color = 'var(--danger)';
+                    errorBox.textContent = 'OAuth connection timed out.';
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

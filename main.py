@@ -727,6 +727,80 @@ class JointDataset(Dataset):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# ─────────────────────────────────────────────────────────────────────────────
+# GRAPH ATTENTION NETWORK (GAT) & FRAUD DEPENDENCY GRAPH (FDG) MODULES
+# ─────────────────────────────────────────────────────────────────────────────
+
+class GraphAttentionLayer(nn.Module):
+    """
+    Simple GAT layer, similar to Veličković et al., 2018
+    """
+    def __init__(self, in_features: int, out_features: int, dropout: float = 0.2, alpha: float = 0.2):
+        super().__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.dropout = dropout
+        self.alpha = alpha
+
+        self.W = nn.Parameter(torch.empty(size=(in_features, out_features)))
+        nn.init.xavier_uniform_(self.W.data, gain=1.414)
+        
+        self.a = nn.Parameter(torch.empty(size=(2 * out_features, 1)))
+        nn.init.xavier_uniform_(self.a.data, gain=1.414)
+
+        self.leakyrelu = nn.LeakyReLU(self.alpha)
+
+    def forward(self, h: torch.Tensor, adj: torch.Tensor) -> torch.Tensor:
+        Wh = torch.matmul(h, self.W)
+        B = Wh.size(0)
+
+        # Broadcast representation for self-attention coefficients
+        a_input = torch.cat([Wh.repeat(1, B).view(B * B, -1), Wh.repeat(B, 1)], dim=1).view(B, B, 2 * self.out_features)
+        e = self.leakyrelu(torch.matmul(a_input, self.a).squeeze(2))
+
+        # Apply adjacency mask
+        zero_vec = -9e15 * torch.ones_like(e)
+        attention = torch.where(adj > 0, e, zero_vec)
+        attention = F.softmax(attention, dim=1)
+        attention = F.dropout(attention, self.dropout, training=self.training)
+        
+        h_prime = torch.matmul(attention, Wh)
+        return F.elu(h_prime)
+
+
+class GATModule(nn.Module):
+    """
+    Graph Attention Network representing transactional dependencies.
+    """
+    def __init__(self, cond_dim: int, hidden_dim: int = 16):
+        super().__init__()
+        self.gat1 = GraphAttentionLayer(cond_dim, hidden_dim)
+        self.gat2 = GraphAttentionLayer(hidden_dim, cond_dim)
+        
+    def forward(self, c: torch.Tensor, adj: torch.Tensor) -> torch.Tensor:
+        h = self.gat1(c, adj)
+        h = self.gat2(h, adj)
+        return h
+
+
+def construct_fraud_dependency_graph(X_baf: torch.Tensor, threshold: float = 0.5) -> torch.Tensor:
+    """
+    Constructs a batch-wise Adjacency Matrix (Fraud Dependency Graph)
+    based on demographic features similarity.
+    """
+    B = X_baf.size(0)
+    # Use demographic prefix (first 10 columns) for edge connections
+    demo = X_baf[:, :10]
+    demo_norm = F.normalize(demo, p=2, dim=1)
+    sim = torch.mm(demo_norm, demo_norm.t())
+    
+    adj = (sim >= threshold).float()
+    adj = adj + torch.eye(B, device=X_baf.device)
+    adj = torch.clamp(adj, 0.0, 1.0)
+    return adj
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # SECTION 3 – GENERATOR (ResNet + FiLM Conditioning)
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -775,6 +849,7 @@ class Generator(nn.Module):
                  hidden: int = CFG.gen_hidden, n_blocks: int = CFG.n_res_blocks,
                  baf_dim: int = CFG.baf_dim, pii_dim: int = CFG.pii_dim):
         super().__init__()
+        self.gat = GATModule(cond, hidden_dim=16) # GAT module for Fraud-Aware Conditioning
         self.proj = nn.Sequential(
             nn.Linear(latent + cond, hidden),
             nn.LeakyReLU(0.2, inplace=True),
@@ -796,7 +871,9 @@ class Generator(nn.Module):
         )
 
     def forward(self, z: torch.Tensor,
-                c: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+                c: torch.Tensor, adj: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor]:
+        if adj is not None:
+            c = self.gat(c, adj)
         h = self.proj(torch.cat([z, c], dim=1))
         for blk in self.blocks:
             h = blk(h, c)
@@ -1360,7 +1437,8 @@ def compute_throughput(generator: nn.Module, caa: CAAModule,
     for _ in range(n_warmup):
         with torch.no_grad():
             z, c = sample_noise(cfg.batch_size, cfg, device)
-            xb, xp = generator(z, c)
+            adj = torch.eye(cfg.batch_size, device=device)
+            xb, xp = generator(z, c, adj)
             _, _, _ = caa(xb, xp)
 
     if device.type == "cuda":
@@ -1373,7 +1451,8 @@ def compute_throughput(generator: nn.Module, caa: CAAModule,
     with torch.no_grad():
         while generated < n_tokens:
             z, c = sample_noise(bs, cfg, device)
-            xb, xp = generator(z, c)
+            adj = torch.eye(bs, device=device)
+            xb, xp = generator(z, c, adj)
             _, _, _ = caa(xb, xp)
             generated += bs
 
@@ -1548,7 +1627,8 @@ def train(cfg: Config, X_baf: np.ndarray, X_pii: np.ndarray,
                 z, c = sample_noise(B, cfg, device)
 
                 with autocast(enabled=cfg.amp and device.type == "cuda"):
-                    fake_baf, fake_pii = generator(z, c)
+                    adj = construct_fraud_dependency_graph(rb)
+                    fake_baf, fake_pii = generator(z, c, adj)
                     if flags["use_caa"]:
                         _, fake_pii, _ = caa(fake_baf, fake_pii)
 
@@ -1569,7 +1649,8 @@ def train(cfg: Config, X_baf: np.ndarray, X_pii: np.ndarray,
             z, c = sample_noise(B, cfg, device)
 
             with autocast(enabled=cfg.amp and device.type == "cuda"):
-                fake_baf, fake_pii = generator(z, c)
+                adj = construct_fraud_dependency_graph(rb)
+                fake_baf, fake_pii = generator(z, c, adj)
                 caa_loss = torch.tensor(0.0, device=device)
                 if flags["use_caa"]:
                     _, fake_pii, caa_loss = caa(fake_baf, fake_pii)
@@ -1723,7 +1804,8 @@ def generate_tokens(generator: Generator, caa: CAAModule,
         for i in range(0, n, 1024):
             bs = min(1024, n - i)
             z, c = sample_noise(bs, cfg, device)
-            xb, xp = generator(z, c)
+            adj = torch.eye(bs, device=device)
+            xb, xp = generator(z, c, adj)
             _, xp, _ = caa(xb, xp)
             baf_list.append(xb.cpu().numpy())
             pii_list.append(xp.cpu().numpy())
@@ -2088,7 +2170,8 @@ def generate_table5(out_dir: str, generator: Generator, caa: CAAModule,
     if device.type == "cuda":
         torch.cuda.reset_peak_memory_stats()
     z, c = sample_noise(cfg.batch_size, cfg, device)
-    xb, xp = generator(z, c)
+    adj = torch.eye(cfg.batch_size, device=device)
+    xb, xp = generator(z, c, adj)
     _, xp2, cl = caa(xb, xp)
     loss = -xp2.sum() + cl
     loss.backward()
@@ -2353,16 +2436,16 @@ def main():
         global DEVICE
         DEVICE = torch.device(CFG.device)
 
-# Adapt batch size for available GPU memory
-if torch.cuda.is_available():
-    props = torch.cuda.get_device_properties(0)
-    available_gb = props.total_memory / 1e9
-    if available_gb < 6:
-        CFG.batch_size = 128  # Reduce from 256 for smaller GPUs
-        logger.info(f"GPU memory {available_gb:.1f}GB detected - reducing batch size to 128")
-    elif available_gb < 10:
-        CFG.batch_size = 192
-        logger.info(f"GPU memory {available_gb:.1f}GB detected - batch size set to 192")
+    # Adapt batch size for available GPU memory
+    if torch.cuda.is_available():
+        props = torch.cuda.get_device_properties(0)
+        available_gb = props.total_memory / 1e9
+        if available_gb < 6:
+            CFG.batch_size = 128  # Reduce from 256 for smaller GPUs
+            logger.info(f"GPU memory {available_gb:.1f}GB detected - reducing batch size to 128")
+        elif available_gb < 10:
+            CFG.batch_size = 192
+            logger.info(f"GPU memory {available_gb:.1f}GB detected - batch size set to 192")
 
     run_ablation = not args.no_ablation
 
