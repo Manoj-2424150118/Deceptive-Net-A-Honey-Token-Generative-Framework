@@ -72,6 +72,11 @@ Deceptive-Net is an advanced, academic-tier cybersecurity platform built to simu
 * **Administrator:** `admin` / `admin123`
 * **Analyst:** `analyst` / `analyst123`
 
+> ⚠️ Demo accounts exist **only** when `DECEPTIVE_NET_ENABLE_DEMO_USERS=true`.
+> The bundled `docker-compose.yml` sets this for the local demo; it is **off by
+> default** and must never be enabled in a real deployment, because these
+> passwords are public.
+
 ---
 
 ## 🏗️ Architecture Flow

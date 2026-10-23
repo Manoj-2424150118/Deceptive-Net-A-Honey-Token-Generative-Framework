@@ -88,7 +88,8 @@ docker-compose up --build
 # Dashboard:  http://localhost:8080
 # API Docs:   http://localhost:8000/docs
 
-# Default credentials
+# Demo credentials (only seeded when DECEPTIVE_NET_ENABLE_DEMO_USERS=true,
+# which the bundled docker-compose.yml sets for local demo use; default off)
 # admin   / admin123
 # analyst / analyst123
 # viewer  / viewer123

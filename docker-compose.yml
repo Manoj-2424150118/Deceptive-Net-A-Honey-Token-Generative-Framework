@@ -8,6 +8,9 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - JWT_SECRET_KEY=deceptive-net-change-me-in-production
+      # Local demo only: enables the well-known demo accounts (admin/analyst/
+      # viewer, passwords in README). Remove this line for any real deployment.
+      - DECEPTIVE_NET_ENABLE_DEMO_USERS=true
     dns:
       - 8.8.8.8
       - 8.8.4.4

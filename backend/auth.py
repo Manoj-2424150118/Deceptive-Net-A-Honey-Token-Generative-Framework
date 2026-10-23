@@ -39,31 +39,43 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 
 # ── static user database (in production: use a proper DB) ─────────────────────
-# Hashes pre-computed: bcrypt(password, rounds=12)
-# admin123    → $2b$12$...
-# analyst123  → $2b$12$...
-# viewer123   → $2b$12$...
-# To regenerate: python -c "from passlib.context import CryptContext; c=CryptContext(schemes=['bcrypt']); print(c.hash('yourpassword'))"
-USERS_DB = {
-    "admin": {
-        "username": "admin",
-        "hashed_password": pwd_context.hash("admin123"),
-        "role": "admin",
-        "full_name": "System Administrator",
-    },
-    "analyst": {
-        "username": "analyst",
-        "hashed_password": pwd_context.hash("analyst123"),
-        "role": "analyst",
-        "full_name": "Fraud Analyst",
-    },
-    "viewer": {
-        "username": "viewer",
-        "hashed_password": pwd_context.hash("viewer123"),
-        "role": "viewer",
-        "full_name": "Read-Only Viewer",
-    },
-}
+# Demo accounts are a security risk if they ship enabled: their passwords are
+# documented publicly in this repo. They are therefore seeded ONLY when the
+# environment variable DECEPTIVE_NET_ENABLE_DEMO_USERS is explicitly set to a
+# truthy value ("1", "true", "yes", "on"). Default is OFF (fail closed):
+# USERS_DB starts empty and accounts must be created via register_new_user.
+# The bundled docker-compose.yml enables the flag for the local demo only —
+# NEVER enable it in a real deployment.
+DEMO_USERS_ENABLED = os.getenv(
+    "DECEPTIVE_NET_ENABLE_DEMO_USERS", ""
+).strip().lower() in ("1", "true", "yes", "on")
+
+
+def _seed_demo_users() -> dict:
+    """Well-known demo accounts (admin/analyst/viewer). Local demos only."""
+    return {
+        "admin": {
+            "username": "admin",
+            "hashed_password": pwd_context.hash("admin123"),
+            "role": "admin",
+            "full_name": "System Administrator",
+        },
+        "analyst": {
+            "username": "analyst",
+            "hashed_password": pwd_context.hash("analyst123"),
+            "role": "analyst",
+            "full_name": "Fraud Analyst",
+        },
+        "viewer": {
+            "username": "viewer",
+            "hashed_password": pwd_context.hash("viewer123"),
+            "role": "viewer",
+            "full_name": "Read-Only Viewer",
+        },
+    }
+
+
+USERS_DB = _seed_demo_users() if DEMO_USERS_ENABLED else {}
 
 
 # ── models ────────────────────────────────────────────────────────────────────

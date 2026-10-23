@@ -159,6 +159,7 @@ Automatically watermarks exfiltrated CSV files. Decoy credentials and credit car
 Under a Deep Q-Network policy, the TDA dynamically selects optimal decoy token deployment actions (e.g., injecting professional credentials, rotating tokens) based on attacker dwell time and command entropy in the Cowrie SSH honeypot.
 
 ### 🔑 Demo Credentials
+Available only when the server runs with `DECEPTIVE_NET_ENABLE_DEMO_USERS=true` (local demo via docker-compose; off by default, never enable in production).
 - **Security Administrator**: `admin` / `admin123` (Full RBAC access to threat intel, TDA logs, audit logs, and metrics)
 - **Fraud Analyst**: `analyst` / `analyst123` (Read/write access to transactions, SHAP explainability, and secure export)
 - **Read-Only Auditor**: `viewer` / `viewer123` (Read-only access to transaction feeds)

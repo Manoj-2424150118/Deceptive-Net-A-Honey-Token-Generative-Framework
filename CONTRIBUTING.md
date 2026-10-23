@@ -42,7 +42,7 @@ docker compose up --build
 
 - Dashboard: <http://localhost:8080>
 - Backend API docs (Swagger): <http://localhost:8000/docs>
-- Demo credentials: `admin` / `admin123` (administrator), `analyst` / `analyst123` (analyst)
+- Demo credentials: `admin` / `admin123` (administrator), `analyst` / `analyst123` (analyst) — seeded only because the bundled compose file sets `DECEPTIVE_NET_ENABLE_DEMO_USERS=true` for the local demo; the backend default is off.
 
 On Windows you can instead run the one-click launcher, `start_deceptive_net.bat`,
 which checks Docker, builds the containers, and opens the dashboard.
