@@ -1,12 +1,12 @@
-numpy
-pandas
+numpy>=1.26.0,<2.0.0
+pandas>=2.2.0
 matplotlib
 scipy
-scikit-learn
+scikit-learn>=1.4.0
 torch
 torchvision
 torchaudio
 flask
-fastapi
-uvicorn
+fastapi>=0.110.0
+uvicorn>=0.27.1
 gradio
