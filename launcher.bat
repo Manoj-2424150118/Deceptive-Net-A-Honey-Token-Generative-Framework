@@ -57,18 +57,16 @@ echo.
 echo [3/9] Creating requirements.txt...
 
 (
-echo numpy
-echo pandas
-echo matplotlib
-echo scipy
-echo scikit-learn
-echo torch
-echo torchvision
-echo torchaudio
-echo flask
-echo fastapi
-echo uvicorn
-echo gradio
+echo numpy^>=1.26.0,^<2.0.0
+echo pandas^>=2.2.0
+echo matplotlib^>=3.8.0
+echo scipy^>=1.12.0
+echo scikit-learn^>=1.4.0
+echo torch^>=2.2.0
+echo torchvision^>=0.17.0
+echo torchaudio^>=2.2.0
+echo fastapi^>=0.110.0
+echo uvicorn^>=0.27.1
 ) > requirements.txt
 
 echo requirements.txt created.

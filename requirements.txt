@@ -1,12 +1,10 @@
 numpy>=1.26.0,<2.0.0
 pandas>=2.2.0
-matplotlib
-scipy
+matplotlib>=3.8.0
+scipy>=1.12.0
 scikit-learn>=1.4.0
-torch
-torchvision
-torchaudio
-flask
+torch>=2.2.0
+torchvision>=0.17.0
+torchaudio>=2.2.0
 fastapi>=0.110.0
 uvicorn>=0.27.1
-gradio
