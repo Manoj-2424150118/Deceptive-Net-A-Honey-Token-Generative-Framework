@@ -52,8 +52,8 @@ Deceptive-Net is an advanced, academic-tier cybersecurity platform built to simu
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/deceptive-net.git
-   cd deceptive-net
+   git clone https://github.com/Manoj-2424150118/Deceptive-Net-A-Honey-Token-Generative-Framework.git
+   cd Deceptive-Net-A-Honey-Token-Generative-Framework
    ```
 
 2. **Boot the Environment**
