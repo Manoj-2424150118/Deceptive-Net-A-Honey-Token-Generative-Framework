@@ -73,6 +73,20 @@ from backend.deception import (
     deception_registry, FIRST_NAMES, LAST_NAMES, EMAIL_DOMAINS,
     COMMON_PASSWORDS, _luhn_check_digit
 )
+from backend.canary_tokens import CanaryRegistry, identify_family, token_values
+
+# Canary-token registry (decoy machine credentials: AWS keys, GitHub
+# PATs, API keys, Postgres DSNs). Records are fingerprint-only and are
+# persisted so checks survive restarts; override the location with
+# CANARY_REGISTRY_PATH.
+CANARY_REGISTRY_PATH = os.getenv(
+    "CANARY_REGISTRY_PATH",
+    os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "outputs", "canary_registry.json",
+    ),
+)
+canary_registry = CanaryRegistry(storage_path=CANARY_REGISTRY_PATH)
 
 # ── app setup ─────────────────────────────────────────────────────────────────
 limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
@@ -291,6 +305,15 @@ class TrackingEventRequest(BaseModel):
     details: str = Field(..., description="Context details (e.g. tab name, selected transaction ID)", json_schema_extra={"example": "tab-model-metrics"})
 
 
+class CanaryGenerateRequest(BaseModel):
+    family: str = Field(..., description="Token family: aws | github_pat | api_key | postgres_dsn", json_schema_extra={"example": "aws"})
+    planted_in: str = Field(..., min_length=1, max_length=200, description="Where the decoy will be planted", json_schema_extra={"example": "github.com/acme/config-repo/.env"})
+
+
+class CanaryCheckRequest(BaseModel):
+    value: str = Field(..., min_length=1, description="Suspicious value to check against the canary registry", json_schema_extra={"example": "AKIA..."})
+
+
 # ── synthetic transaction generator ──────────────────────────────────────────
 LOCATIONS = [
     "Mumbai, IN", "New York, US", "London, UK", "Beijing, CN",
@@ -473,6 +496,67 @@ async def track_user_event(request: Request, payload: TrackingEventRequest):
         ip=client_ip
     )
     return {"status": "success"}
+
+
+# ── Canary token endpoints ────────────────────────────────────────────────────
+
+@app.post("/api/canary/generate", tags=["ML"])
+@limiter.limit("20/minute")
+async def canary_generate(request: Request, payload: CanaryGenerateRequest,
+                          current_user: UserInDB = Depends(get_current_user)):
+    """Generate a decoy machine credential and register its fingerprint.
+
+    The raw token is returned once, for planting; the registry keeps
+    only SHA-256 fingerprints of its values.
+    """
+    try:
+        token = canary_registry.generate_and_register(
+            payload.family, planted_in=payload.planted_in,
+            actor=current_user.username)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    plant = canary_registry.check(token_values(token)[0])
+    log_event(
+        actor=current_user.username,
+        action="CANARY_TOKEN_GENERATED",
+        resource=payload.family,
+        detail=f"planted_in={payload.planted_in}",
+        severity="INFO",
+        ip=request.client.host if request.client else "unknown"
+    )
+    return {"status": "success", "token": token, "plant": plant}
+
+
+@app.post("/api/canary/check", tags=["ML"])
+@limiter.limit("30/minute")
+async def canary_check(request: Request, payload: CanaryCheckRequest,
+                       current_user: UserInDB = Depends(get_current_user)):
+    """Check whether a suspicious value is one of our planted canaries.
+
+    The value is hashed and compared against stored fingerprints; it is
+    never stored and never written to the audit log.
+    """
+    record = canary_registry.check(payload.value)
+    client_ip = request.client.host if request.client else "unknown"
+    if record:
+        log_event(
+            actor=current_user.username,
+            action="CANARY_TOKEN_HIT",
+            resource=record["family"],
+            detail=f"planted_in={record['planted_in']}",
+            severity="ALERT",
+            ip=client_ip
+        )
+        return {"hit": True, "plant": record, "identified_family": record["family"]}
+    log_event(
+        actor=current_user.username,
+        action="CANARY_CHECK_MISS",
+        detail="no fingerprint match",
+        severity="INFO",
+        ip=client_ip
+    )
+    return {"hit": False, "plant": None,
+            "identified_family": identify_family(payload.value.strip())}
 
 
 # ── Transaction endpoints ─────────────────────────────────────────────────────

@@ -34,6 +34,8 @@ via :meth:`CanaryRegistry.check` — when somebody tries to use one.
 from __future__ import annotations
 
 import hashlib
+import json
+import os
 import re
 import secrets
 import string
@@ -134,9 +136,36 @@ class CanaryRegistry:
     without the registry ever storing the raw secrets.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, storage_path: Optional[str] = None) -> None:
         self._by_fingerprint: Dict[str, dict] = {}
         self._plants: List[dict] = []
+        self._storage_path = storage_path
+        if storage_path:
+            self._load()
+
+    def _load(self) -> None:
+        """Reload plants from the JSON store (fingerprints only)."""
+        try:
+            with open(self._storage_path, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+        except (OSError, ValueError):
+            return
+        for record in data.get("plants", []):
+            self._plants.append(record)
+            for fp in record.get("fingerprints", []):
+                self._by_fingerprint[fp] = record
+
+    def _save(self) -> None:
+        """Persist plants atomically. The file holds fingerprints only —
+        never raw token values — so it is safe to keep on disk."""
+        if not self._storage_path:
+            return
+        directory = os.path.dirname(os.path.abspath(self._storage_path))
+        os.makedirs(directory, exist_ok=True)
+        tmp_path = self._storage_path + ".tmp"
+        with open(tmp_path, "w", encoding="utf-8") as fh:
+            json.dump({"plants": self._plants}, fh, indent=2)
+        os.replace(tmp_path, self._storage_path)
 
     def register(self, token: Dict[str, str], *, planted_in: str,
                  actor: str = "unknown") -> dict:
@@ -156,6 +185,7 @@ class CanaryRegistry:
         for fp in record["fingerprints"]:
             self._by_fingerprint[fp] = record
         self._plants.append(record)
+        self._save()
         return record
 
     def check(self, value: str) -> Optional[dict]:

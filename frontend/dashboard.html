@@ -434,8 +434,45 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Canary Tokens: decoy machine credentials -->
+                <div class="glass-panel" style="padding:24px;margin-top:20px">
+                    <h3 style="font-family:var(--font-mono);font-size:0.95rem;color:var(--accent-light);text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+                        <span>🪤</span> Canary Tokens (Decoy Machine Credentials)
+                    </h3>
+                    <p style="font-size:0.85rem;color:var(--text-dim);line-height:1.5;margin-bottom:20px">
+                        Breaches leak machine secrets first — cloud keys, access tokens, database DSNs. Generate a format-faithful decoy, plant it where a leak would surface it, and the registry (SHA-256 fingerprints only, never the raw values) tells you exactly which plant resurfaced when someone tries to use it.
+                    </p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                        <form id="canary-generate-form" style="display:flex;flex-direction:column;gap:14px">
+                            <div>
+                                <label style="display:block;font-size:0.75rem;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px">Token Family</label>
+                                <select id="canary-family" style="width:100%;padding:10px;background:rgba(0,0,0,.5);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font-mono);outline:none">
+                                    <option value="aws">AWS Access Key Pair</option>
+                                    <option value="github_pat">GitHub Personal Access Token</option>
+                                    <option value="api_key">Generic API Key</option>
+                                    <option value="postgres_dsn">PostgreSQL DSN</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:0.75rem;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px">Planted In</label>
+                                <input type="text" id="canary-planted" required placeholder="e.g. github.com/acme/infra/.env" style="width:100%;padding:10px;background:rgba(0,0,0,.5);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);outline:none">
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Generate &amp; Register</button>
+                        </form>
+                        <form id="canary-check-form" style="display:flex;flex-direction:column;gap:14px">
+                            <div>
+                                <label style="display:block;font-size:0.75rem;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px">Check a Suspicious Value</label>
+                                <input type="text" id="canary-check-value" required placeholder="Paste a leaked key, token or DSN" style="width:100%;padding:10px;background:rgba(0,0,0,.5);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font-mono);outline:none">
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Check Against Registry</button>
+                            <div id="canary-check-result" class="glass-panel" style="padding:12px;display:none;font-family:var(--font-mono);font-size:0.8rem;line-height:1.5"></div>
+                        </form>
+                    </div>
+                    <div id="canary-generate-result" class="glass-panel" style="margin-top:20px;padding:12px;display:none;font-family:var(--font-mono);font-size:0.8rem;line-height:1.5;white-space:pre-wrap;word-break:break-all"></div>
+                </div>
             </section>
-            
+
             <!-- TAB: Threat Intel (Admin only) -->
             <section id="tab-threat-intel" class="tab-content">
                 <!-- Threat Summary Row -->

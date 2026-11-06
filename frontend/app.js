@@ -130,6 +130,8 @@ function initApp() {
     // Deception Lab & Threat Intel Sandbox Hooks
     document.getElementById('hp-payment-form')?.addEventListener('submit', submitHoneypotPayment);
     document.getElementById('hp-login-form')?.addEventListener('submit', submitHoneypotLogin);
+    document.getElementById('canary-generate-form')?.addEventListener('submit', submitCanaryGenerate);
+    document.getElementById('canary-check-form')?.addEventListener('submit', submitCanaryCheck);
     document.getElementById('hp-term-input')?.addEventListener('keypress', handleTerminalInput);
     document.getElementById('nav-threat-intel')?.addEventListener('click', loadThreatIntel);
     document.getElementById('nav-playground')?.addEventListener('click', initDeceptionLab);
@@ -296,6 +298,63 @@ async function loadTransactions() {
         });
     } catch(e) {
         tbody.innerHTML = `<tr><td colspan="10" class="loading-cell" style="color:var(--red)">ERR: ${e.message}. Ensure backend is running.</td></tr>`;
+    }
+}
+
+// ── Canary Tokens ────────────────────────────────────────────────────────────
+async function submitCanaryGenerate(e) {
+    e.preventDefault();
+    const out = document.getElementById('canary-generate-result');
+    out.style.display = 'block';
+    out.style.whiteSpace = 'pre-wrap';
+    out.textContent = '> Generating decoy credential...';
+    try {
+        const res = await fetch(`${API}/api/canary/generate`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({
+                family: document.getElementById('canary-family').value,
+                planted_in: document.getElementById('canary-planted').value
+            })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+        const values = Object.entries(data.token)
+            .filter(([k]) => k !== 'family')
+            .map(([k, v]) => `${k}: ${v}`).join('\n');
+        out.textContent = `✔ Registered as ${data.plant.plant_id} — the registry keeps only its fingerprints. Plant these values:\n${values}\n\nIf one resurfaces, Check traces it back to: ${data.plant.planted_in}`;
+    } catch (err) {
+        out.textContent = `✖ ${err.message}`;
+    }
+}
+
+async function submitCanaryCheck(e) {
+    e.preventDefault();
+    const out = document.getElementById('canary-check-result');
+    out.style.display = 'block';
+    out.style.whiteSpace = 'pre-wrap';
+    out.textContent = '> Checking registry...';
+    try {
+        const res = await fetch(`${API}/api/canary/check`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({
+                value: document.getElementById('canary-check-value').value
+            })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+        if (data.hit) {
+            out.style.borderColor = 'var(--red)';
+            out.textContent = `🚨 CANARY HIT\nPlanted in: ${data.plant.planted_in}\nFamily: ${data.plant.family} · Planted by: ${data.plant.actor}\nWhen: ${data.plant.timestamp}`;
+        } else {
+            out.style.borderColor = 'var(--border)';
+            out.textContent = data.identified_family
+                ? `No match — the shape matches ${data.identified_family}, but it is not one of our planted canaries.`
+                : 'No match — not a recognised canary token.';
+        }
+    } catch (err) {
+        out.textContent = `✖ ${err.message}`;
     }
 }
 
