@@ -11,3 +11,7 @@ passlib[bcrypt]>=1.7.4
 bcrypt>=3.2.0,<4.3.0
 slowapi>=0.1.9
 python-multipart>=0.0.9
+
+# Test-only dependency: FastAPI TestClient (starlette) requires httpx.
+# Pinned <0.28 — newer httpx removed the `app=` shortcut this FastAPI/starlette generation relies on.
+httpx<0.28
