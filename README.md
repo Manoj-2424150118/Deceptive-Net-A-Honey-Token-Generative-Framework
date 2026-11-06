@@ -12,6 +12,7 @@ Deceptive-Net is an advanced, academic-tier cybersecurity platform built to simu
 * 🚀 **Real-Time Fraud Detection:** Analyzes streaming synthetic transactions using a robust machine learning ensemble.
 * 🤖 **AI Ensemble Engine:** Combines LightGBM (Gradient Boosting) for high-speed classification with a PyTorch Autoencoder for unsupervised anomaly detection based on reconstruction error.
 * 🛡️ **Cyber Deception (Honey Tokens):** Automatically injects traceable, watermarked transaction data (`HTXN`) into CSV exports. If leaked or accessed by rogue insiders, the system generates high-priority alerts.
+* 🗝️ **Canary Tokens (new):** Decoy *machine* secrets — AWS-style key pairs, GitHub-style PATs, generic API keys and PostgreSQL DSNs (`backend/canary_tokens.py`, pure stdlib). Generated with a CSPRNG and registered by SHA-256 fingerprint only, so the registry can attribute a leaked key to its plant without ever storing the raw secret. Tests: `cd backend && python -m unittest discover -s tests`.
 * 🧅 **Onion Circuit Simulation:** The dashboard visualizes a dynamic, obfuscated network topology (Guard → Middle → Exit nodes) to disguise the underlying server architecture from attackers.
 * 🧠 **Explainable AI (SHAP):** Transparently highlights exactly *why* a transaction was flagged by showing the feature importance for every prediction.
 * 🔒 **Role-Based Access Control (RBAC):** Stateless JSON Web Token (JWT) authentication for secure segregation between Admins, Analysts, and Viewers.
