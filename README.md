@@ -9,6 +9,7 @@
 ![LightGBM](https://img.shields.io/badge/LightGBM-Ensemble-02569B)
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
+[![Backend Tests](https://github.com/Manoj-2424150118/Deceptive-Net-A-Honey-Token-Generative-Framework/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/Manoj-2424150118/Deceptive-Net-A-Honey-Token-Generative-Framework/actions/workflows/backend-tests.yml)
 
 **Repository:** [github.com/Manoj-2424150118/Deceptive-Net-A-Honey-Token-Generative-Framework](https://github.com/Manoj-2424150118/Deceptive-Net-A-Honey-Token-Generative-Framework)
 
@@ -154,7 +155,7 @@ cd backend && python -m unittest discover -s tests    # 17 tests
 | `backend/tests/test_canary_tokens.py` (11 tests) | Canary generation per family, fingerprint-only registry behaviour, family shape-matching, persistence |
 | `backend/tests/test_canary_api.py` (6 tests) | `/api/canary/generate` + `/api/canary/check` — auth gating, HIT/MISS attribution, restart persistence of the file-backed registry |
 
-The root `test_suite.py` is an extended unit/integration/benchmark suite for the fraud-detection system; it expects the trained models and dataset from the setup steps. This repository has no CI workflow — the suites above are the verification gate, and they are run before changes are pushed.
+The root `test_suite.py` is an extended unit/integration/benchmark suite for the fraud-detection system; it expects the trained models and dataset from the setup steps. CI (`.github/workflows/backend-tests.yml`) runs the 17 backend tests on Python 3.12 for pushes and pull requests touching `backend/`.
 
 ---
 
