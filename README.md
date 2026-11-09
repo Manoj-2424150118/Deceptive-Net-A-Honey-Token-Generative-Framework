@@ -100,7 +100,7 @@ Interactive reference at `http://localhost:8000/docs` when the backend is runnin
 | Layer | Technology |
 |---|---|
 | Backend | Python 3.10 · FastAPI 0.110 · Uvicorn · WebSockets |
-| Auth & security | JWT (`python-jose`) · RBAC · passlib + bcrypt (pinned `<4.1` for passlib compatibility) · slowapi rate limiting |
+| Auth & security | JWT (`PyJWT`) · RBAC · passlib + bcrypt (pinned `<4.1` for passlib compatibility) · slowapi rate limiting |
 | ML — detection | LightGBM · scikit-learn (autoencoder, StandardScaler) · pandas / NumPy / SciPy · joblib |
 | ML — generation | PyTorch ≥ 2.2 — cross-domain conditional WGAN-GP |
 | Frontend | HTML5 / CSS3 / vanilla JavaScript (no framework) · nginx |

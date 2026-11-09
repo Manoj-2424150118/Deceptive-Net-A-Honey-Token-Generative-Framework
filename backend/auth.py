@@ -4,7 +4,7 @@ Deceptive-Net – Auth Module
 JWT-based Role-Based Access Control (RBAC).
 Roles: admin | analyst | viewer
 
-Dependencies: python-jose, passlib[bcrypt]
+Dependencies: PyJWT, passlib[bcrypt]
 """
 
 # BCrypt compatibility monkeypatch for passlib
@@ -25,7 +25,8 @@ from typing import Optional
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+import jwt
+from jwt import InvalidTokenError as JWTError
 from passlib.context import CryptContext
 from pydantic import BaseModel
 

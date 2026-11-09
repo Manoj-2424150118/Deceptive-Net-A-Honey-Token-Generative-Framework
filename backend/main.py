@@ -1226,7 +1226,7 @@ async def ws_transactions(websocket: WebSocket, token: Optional[str] = None):
         return
         
     try:
-        from jose import jwt
+        import jwt
         from backend.auth import SECRET_KEY, ALGORITHM
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get("sub")
