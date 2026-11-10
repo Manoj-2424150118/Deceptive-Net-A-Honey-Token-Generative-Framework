@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions & discussion
+    url: https://github.com/Manoj-2424150118/Deceptive-Net-A-Honey-Token-Generative-Framework/discussions
+    about: Ask questions and discuss ideas in GitHub Discussions instead of opening an issue.
+  - name: Security policy
+    url: https://github.com/Manoj-2424150118/Deceptive-Net-A-Honey-Token-Generative-Framework/security/policy
+    about: Please review the security policy before reporting a vulnerability.
