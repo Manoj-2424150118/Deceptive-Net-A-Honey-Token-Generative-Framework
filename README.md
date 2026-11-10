@@ -13,7 +13,19 @@
 
 **Repository:** [github.com/Manoj-2424150118/Deceptive-Net-A-Honey-Token-Generative-Framework](https://github.com/Manoj-2424150118/Deceptive-Net-A-Honey-Token-Generative-Framework)
 
+<p align="center"><img src="docs/demo.gif" alt="Deceptive-Net demo — sign in, dashboard, and the canary token flow" width="860"/></p>
+
 ---
+
+## Quickstart
+
+```bash
+git clone https://github.com/Manoj-2424150118/Deceptive-Net-A-Honey-Token-Generative-Framework.git
+cd Deceptive-Net-A-Honey-Token-Generative-Framework
+docker compose up --build      # dashboard on http://localhost:8080 · API docs on :8000/docs
+```
+
+The compose file enables demo accounts for local use only — read [Setup & run](#setup--run) before running it anywhere else.
 
 ## Overview
 
